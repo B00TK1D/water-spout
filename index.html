@@ -4,6 +4,7 @@
     </head>
     <body>
         <h1>Water Spout</h1>
+        <div width="400" id="localports">Localhost: (scanning...)</div>
         <div width="400" id="gateway">Gateway: (detecting...)</div>
         <div width="400" id="hostslabel">Hosts: (scanning...)</div>
         <div width="400" id="hosts"></div>
@@ -22,6 +23,12 @@
                     sum += arr[i];
                 }
                 return sum / arr.length;
+            }
+            function median(arr) {
+                arr.sort(function(a, b) {
+                    return a - b;
+                });
+                return arr[Math.floor(arr.length / 2)];
             }
             function stddev(arr) {
                 var avg = mean(arr);
@@ -128,7 +135,7 @@
                 }
                 return hosts;
             }
-            async function portScan(host, scanCount = 5, ports = defaultPorts) {
+            async function portScan(host, scanCount = 20, ports = defaultPorts) {
                 var pings = [];
                 for (var i = 0; i < ports.length; i++) {
                     pings.push([]);
@@ -141,7 +148,7 @@
                         pings[j][i] = ping(host, ports[j]);
                         await sleep(1);
                     }
-                    await sleep(1000);
+                    await sleep(10);
                 }
                 var average = 0;
                 var adjusted = [];
@@ -150,14 +157,14 @@
                     for (var j = 0; j < scanCount; j++) {
                         localResults.push(await pings[i][j]);
                     }
-                    localAverage = mean(localResults);
+                    localAverage = median(localResults);
                     adjusted.push(localAverage);
                     average += localAverage;
                 }
                 average /= ports.length;
                 var openPorts = [];
                 for (var i = 0; i < ports.length; i++) {
-                    if (adjusted[i] < (average * 0.25)) {
+                    if (adjusted[i] > (average * 0.90)) {
                         console.log("Detected open port " + ports[i] + " on " + host);
                         openPorts.push(ports[i]);
                     }
@@ -165,6 +172,18 @@
                 return openPorts;
             }
             async function main() {
+                // Port scan localhost
+                var localPorts = await portScan("127.0.0.1");
+
+                // Output local ports
+                console.log("Local ports: " + localPorts);
+                document.getElementById("localports").innerHTML = "Localhost: <br>"
+                for (var i = 0; i < localPorts.length; i++) {
+                    document.getElementById("localports").innerHTML += "-- " + localPorts[i] + "<br>";
+                }
+                
+
+
                 // Identify the network by searching for common default gateways
                 var commonGateways = ["192.168.0.0/29", "10.0.0.0/29"];
                 var gatewaysAlive = [];
