@@ -164,7 +164,7 @@
                 average /= ports.length;
                 var openPorts = [];
                 for (var i = 0; i < ports.length; i++) {
-                    if (adjusted[i] > (average * 0.90)) {
+                    if (adjusted[i] > (average * 1.10)) {
                         console.log("Detected open port " + ports[i] + " on " + host);
                         openPorts.push(ports[i]);
                     }
